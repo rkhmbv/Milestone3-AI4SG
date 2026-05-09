@@ -1,0 +1,468 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install -q google-generativeai"
+      ],
+      "metadata": {
+        "id": "YcVJvFpFQGD6"
+      },
+      "execution_count": 62,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata\n",
+        "import json\n",
+        "from IPython.display import display, Markdown\n",
+        "\n",
+        "genai.configure(api_key=userdata.get('GEMINI_API_KEY'))\n",
+        "\n",
+        "# Load Gemini model\n",
+        "model = genai.GenerativeModel(\"gemini-pro\")\n",
+        "\n",
+        "print(\"Gemini model loaded successfully.\")"
+      ],
+      "metadata": {
+        "id": "YjiZ49ulQGD7",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "e20341d6-ec69-4348-9fdd-bdcd6712c3af"
+      },
+      "execution_count": 63,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Gemini model loaded successfully.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "6621d5af"
+      },
+      "source": [
+        "# AI4SG Prototype — Water Quality Monitoring and Structured AI Reporting"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "940bc14e",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "05a93e77-3160-4899-ee78-503737ed311b"
+      },
+      "source": [
+        "print(\"AI4SG water monitoring prototype completed successfully.\")"
+      ],
+      "execution_count": 64,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "AI4SG water monitoring prototype completed successfully.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Demonstration for AI4SG System: The Challenge of Unstructured Data\n",
+        "#When community members report issues like chemical smells near storm drains, the raw text can vary significantly.\n",
+        "#As demonstrated by running the extraction multiple times, the AI's free-form responses, while containing the correct information, lack a predictable format.\n",
+        "#This inconsistency poses a major challenge for automated systems within the City of San Jose Environmental Services Department. Without a standardized output,\n",
+        "#it would be impossible for your AI Processing pipeline to reliably parse, categorize, or act upon these reports.\n",
+        "#For example, a machine learning model designed to prioritize interventions based on 'urgency' or 'location' would fail if these fields are not consistently named and formatted across all incoming reports.\n",
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata\n",
+        "import time\n",
+        "\n",
+        "genai.configure(api_key=userdata.get('GEMINI_API_KEY'))\n",
+        "\n",
+        "resident_message = (\n",
+        "    \"There's a strong chemical smell near the storm drain on Elm Street, close to the creek. \"\n",
+        "    \"I'm worried about what's getting into the water.\"\n",
+        ")\n",
+        "\n",
+        "def extract_unstructured(message):\n",
+        "    m = genai.GenerativeModel(\n",
+        "        model_name=\"gemini-2.5-flash\",\n",
+        "        system_instruction=\"Extract the location, issue type, contaminants, and urgency from this clean water and sanitation report.\"\n",
+        "    )\n",
+        "    response = m.generate_content(message)\n",
+        "    time.sleep(12)  # stays under free tier rate limit\n",
+        "    return response.text\n",
+        "\n",
+        "print(\"--- Resident message ---\")\n",
+        "print(resident_message)\n",
+        "print(\"\\n--- Unstructured extraction (run 3 times — notice the format changes) ---\")\n",
+        "print(\"\\nRun 1:\")\n",
+        "print(extract_unstructured(resident_message))\n",
+        "print(\"\\nRun 2:\")\n",
+        "print(extract_unstructured(resident_message))\n",
+        "print(\"\\nRun 3:\")\n",
+        "print(extract_unstructured(resident_message))"
+      ],
+      "metadata": {
+        "id": "7H3fiWz-11W0",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 121
+        },
+        "outputId": "35b706ca-074c-435c-d490-aaaddc7ca340"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Resident message ---\n",
+            "There's a strong chemical smell near the storm drain on Elm Street, close to the creek. I'm worried about what's getting into the water.\n",
+            "\n",
+            "--- Unstructured extraction (run 3 times — notice the format changes) ---\n",
+            "\n",
+            "Run 1:\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# The schema — the form the AI must fill in exactly for Clean Water and Sanitation reports.\n",
+        "#Basically, these fields like location, issue type, contaminants observed, urgency, affected entities, department,\n",
+        "#and resident language are designed specifically for reporting water and sanitation issues in San Jose.\n",
+        "#By clearly defining what kind of information goes into each field, like using text or lists and setting urgency levels, we’re helping the AI understand exactly what to look for and extract.\n",
+        "#This makes the system much more organized because the AI can break down each report into structured, detailed data instead of just messy descriptions.\n",
+        "#That data can then be easily used in databases, risk analysis, and to send the right teams out to respond.\n",
+        "#For example, separating “issue type” from “contaminants observed” is important. One tells us the general problem, like a sewage leak, while the other tells us the specific substances involved,\n",
+        "#like bacteria or chemicals. That level of detail helps the city respond more accurately and efficiently, especially for complicated issues like pollution from encampments or problems caused by old infrastructure.\n",
+        "\n",
+        "schema_prompt = \"\"\"\n",
+        "Extract information from this resident report regarding clean water and sanitation issues.\n",
+        "Return ONLY valid JSON with exactly these seven fields:\n",
+        "{\n",
+        "  \"location\": string (the specific location of the issue, e.g., creek name, street address near a storm drain, water pipe location),\n",
+        "  \"issue_type\": string (the general type of problem, e.g., \"illegal dumping\", \"water contamination\", \"sewage overflow\", \"storm drain blockage\", \"pipe leak\", \"aging infrastructure\"),\n",
+        "  \"contaminants_observed\": array of strings (specific types of contaminants if observed, e.g., \"biowaste\", \"trash\", \"used needles\", \"chemicals\", \"sediment\"),\n",
+        "  \"urgency\": \"LOW\" or \"MEDIUM\" or \"HIGH\" or \"CRITICAL\",\n",
+        "  \"affected_entities\": array of strings (who or what is affected, e.g., \"residents\", \"wildlife\", \"creek\", \"bay\", \"public health\"),\n",
+        "  \"department\": string (which San Jose city department should respond: e.g. \"City of San Jose Environmental Services Department\", \"Public Works\", \"Water Department\", \"Health Department\", \"Code Enforcement\"),\n",
+        "  \"resident_language\": string (language the resident wrote in, e.g. \"English\", \"Spanish\", \"Vietnamese\")\n",
+        "}\n",
+        "Urgency guide: LOW = minor aesthetic issue, MEDIUM = moderate impact, requires attention; HIGH = significant environmental or health concern, prompt action needed; CRITICAL = immediate severe health risk or environmental disaster, emergency response required.\n",
+        "No explanation. No markdown. JSON only.\n",
+        "\"\"\"\n",
+        "\n",
+        "print(\"New schema defined for Clean Water and Sanitation reports. The AI must return exactly these seven fields:\")\n",
+        "for field in [\"location\", \"issue_type\", \"contaminants_observed\", \"urgency\", \"affected_entities\", \"department\", \"resident_language\"]:\n",
+        "    print(f\"  - {field}\")"
+      ],
+      "metadata": {
+        "id": "5a4xx0362gLu"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#In this system, we use a predefined schema as part of the AI’s instructions so that every response follows the same structured JSON format.\n",
+        "#This guarantees consistency and makes the data predictable and easy to use.\n",
+        "#For example, no matter how a resident describes an issue such as reporting a chemical smell near a storm drain, the AI will always return standardized fields like \"location\", \"issue_type\", and \"urgency\".\n",
+        "#This consistency is critical because it allows the system to automatically process and act on the data without needing manual interpretation. It enables:\n",
+        "#Automated database entry into systems like 311 or custom water quality platforms Reliable machine learning input using clean\n",
+        "#and structured data Efficient dispatching by identifying the correct department (e.g., Environmental Services) Reduced human error and faster response times\n",
+        "#Overall, structured, machine-readable output transforms raw resident complaints into actionable insights for the City of San Jose.\n",
+        "\n",
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata\n",
+        "import json\n",
+        "import time\n",
+        "\n",
+        "genai.configure(api_key=userdata.get('GEMINI_API_KEY'))\n",
+        "\n",
+        "def extract_structured(message):\n",
+        "    m = genai.GenerativeModel(\n",
+        "        model_name=\"gemini-2.5-flash\",\n",
+        "        system_instruction=schema_prompt\n",
+        "    )\n",
+        "    response = m.generate_content(message)\n",
+        "    time.sleep(12)  # stays under free tier rate limit\n",
+        "    raw = response.text.strip()\n",
+        "    # Strip markdown code fences if present\n",
+        "    if raw.startswith(\"```\"):\n",
+        "        raw = raw.split(\"\\n\", 1)[1].rsplit(\"```\", 1)[0].strip()\n",
+        "    return json.loads(raw)\n",
+        "\n",
+        "print(\"--- Resident message ---\")\n",
+        "print(resident_message)\n",
+        "print(\"\\n--- Structured extraction (run 3 times — format is identical each time) ---\")\n",
+        "\n",
+        "for i in range(1, 4):\n",
+        "    print(f\"\\nRun {i}:\")\n",
+        "    result = extract_structured(resident_message)\n",
+        "    print(json.dumps(result, indent=2, ensure_ascii=False))"
+      ],
+      "metadata": {
+        "id": "5ZDZxdQF3tg-"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#This demonstration shows how the AI system performs across a variety of real-world water quality scenarios, including pipe leaks, biowaste dumping near creeks, cloudy tap water,\n",
+        "#and storm drain blockages even when reports are submitted in different languages like Spanish.\n",
+        "#The results highlight the system’s ability to:\n",
+        "#Accurately classify issue types and contaminants: The AI can identify specific problems such as \"pipe leak\" or \"illegal dumping,\" along with contaminants like \"biowaste\" or \"chemicals.\"\n",
+        "#This allows for more targeted and effective responses. Determine the appropriate department: Reports are correctly routed to departments such as the Water Department, Environmental Services,\n",
+        "#or Public Works, ensuring faster and more efficient handling. Identify affected entities: The system recognizes who or what is impacted, including residents, wildlife, or water sources like creeks.\n",
+        "#This helps assess severity and prioritize response. Detect resident language: The AI can identify whether a report is in English or Spanish,\n",
+        "#enabling city agencies to respond in the resident’s preferred language an important feature for serving San Jose’s diverse community.\n",
+        "#Overall, this demonstrates the system’s flexibility and reliability in handling a wide range of complaints while maintaining structured, actionable outputs.\n",
+        "\n",
+        "test_messages = [\n",
+        "    {\n",
+        "        \"label\": \"Pipe Leak\",\n",
+        "        \"message\": \"The water main on Maple Avenue has been leaking for days, causing a huge puddle and wasting a lot of water.\"\n",
+        "    },\n",
+        "    {\n",
+        "        \"label\": \"Creek Dumping (Biowaste)\",\n",
+        "        \"message\": \"I saw a homeless encampment behind the Safeway on Capitol Ave. There's trash and what looks like biowaste near the creek, I'm worried about safety for my kids.\"\n",
+        "    },\n",
+        "    {\n",
+        "        \"label\": \"Water Contamination (Cloudy Tap Water)\",\n",
+        "        \"message\": \"My tap water looks cloudy and tastes metallic this morning. Is it safe to drink? I live on 456 Pine Street.\"\n",
+        "    },\n",
+        "    {\n",
+        "        \"label\": \"Storm Drain Blockage (Spanish)\",\n",
+        "        \"message\": \"La alcantarilla en la calle Oak y la avenida King está completamente bloqueada con basura después de la lluvia. El agua no está drenando y se está desbordando.\"\n",
+        "    }\n",
+        "]\n",
+        "\n",
+        "for item in test_messages:\n",
+        "    print(f\"=== {item['label']} ===\")\n",
+        "    print(f\"Input: {item['message']}\")\n",
+        "    result = extract_structured(item[\"message\"])\n",
+        "    print(\"Output:\")\n",
+        "    print(json.dumps(result, indent=2, ensure_ascii=False))\n",
+        "    print()"
+      ],
+      "metadata": {
+        "id": "ZyUChAUN4icp"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install -q google-generativeai Pillow"
+      ],
+      "metadata": {
+        "id": "CV9DhIWGKBIY"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata, files\n",
+        "import json\n",
+        "import time\n",
+        "from PIL import Image as PILImage\n",
+        "\n",
+        "genai.configure(api_key=userdata.get('GEMINI_API_KEY'))\n",
+        "print(\"Gemini initialized successfully.\")"
+      ],
+      "metadata": {
+        "id": "sobcPx8YvHQ7"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Upload an image file from the user's computer, open it using PIL,\n",
+        "# print the file name and image dimensions, and display the image\n",
+        "# inside the notebook for AI image analysis.\n",
+        "\n",
+        "uploaded = files.upload()\n",
+        "\n",
+        "image_filename = list(uploaded.keys())[0]\n",
+        "\n",
+        "img = PILImage.open(image_filename)\n",
+        "print(f\"Uploaded: {image_filename}\")\n",
+        "print(f\"Image size: {img.size[0]}x{img.size[1]} pixels\")\n",
+        "display(img)"
+      ],
+      "metadata": {
+        "id": "wJ8cHMV9LgqU"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This code cell creates a reusable function that analyzes uploaded images\n",
+        "# using the Gemini AI model. The function takes an image file and a text\n",
+        "# question as input, sends both to Gemini for image recognition, and returns\n",
+        "# the AI-generated response along with usage metadata. The function is later\n",
+        "# used to identify environmental hazards such as contaminated water, trash\n",
+        "# buildup, flooding, or infrastructure damage from uploaded community images.\n",
+        "\n",
+        "def analyze_image(image_path, question):\n",
+        "    \"\"\"\n",
+        "    Send an image + a question to Gemini and return the response.\n",
+        "    Returns: (response_text, usage_metadata)\n",
+        "    \"\"\"\n",
+        "    m = genai.GenerativeModel(model_name=\"gemini-2.5-flash\")\n",
+        "    img = PILImage.open(image_path)\n",
+        "    response = m.generate_content([question, img])\n",
+        "    time.sleep(12)\n",
+        "    return response.text, response.usage_metadata\n",
+        "\n",
+        "print(\"analyze_image() function defined. Ready to use in Parts 3 and 4.\")"
+      ],
+      "metadata": {
+        "id": "analyze_fn_cell"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This code cell asks Gemini AI a series of civic and environmental\n",
+        "# analysis questions about the uploaded image.\n",
+        "# The questions focus on:\n",
+        "#   - identifying the environmental problem,\n",
+        "#   - explaining community and public health impacts,\n",
+        "#   - rating the urgency level,\n",
+        "#   - recommending which city department should respond.\n",
+        "\n",
+        "# The loop sends each question and the uploaded image to the\n",
+        "# analyze_image() function, stores the AI responses in a dictionary,\n",
+        "# tracks the total number of tokens used, and prints the results.\n",
+        "# This demonstrates how AI can support the City of San Jose by\n",
+        "# automatically analyzing environmental hazards reported by residents.\n",
+        "\n",
+        "civic_questions = [\n",
+        "    (\"PROBLEM\",  \"Describe the civic or environmental problem visible in this image. Be specific about what you see.\"),\n",
+        "    (\"IMPACT\",   \"What are the public health, safety, or community impacts of what is shown in this image?\"),\n",
+        "    (\"URGENCY\",  \"Rate the urgency of this situation as LOW, MEDIUM, or HIGH. Explain your rating in 2–3 sentences.\"),\n",
+        "    (\"ACTION\",   \"Which specific city department or service should respond to this? What action should they take?\")\n",
+        "]\n",
+        "\n",
+        "civic_results = {\"answers\": {}, \"total_tokens\": 0}\n",
+        "\n",
+        "for label, question in civic_questions:\n",
+        "    print(f\"--- {label} ---\")\n",
+        "    answer, usage = analyze_image(image_filename, question)\n",
+        "    civic_results[\"answers\"][label] = answer\n",
+        "    civic_results[\"total_tokens\"] += usage.total_token_count\n",
+        "    print(answer)\n",
+        "    print()\n",
+        "\n",
+        "print(f\"--- Total tokens used: {civic_results['total_tokens']} ---\")\n",
+        "print(\"Running on Gemini free tier — no cost.\")"
+      ],
+      "metadata": {
+        "id": "four_q_cell"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This code cell allows the user to ask their own custom question\n",
+        "# about the uploaded environmental image. The question is sent\n",
+        "# together with the image to the analyze_image() function, which\n",
+        "# uses Gemini AI to generate an image-based response. The AI answer\n",
+        "# and the number of tokens used are then displayed. This demonstrates\n",
+        "# interactive AI image analysis where community members or city staff\n",
+        "# can investigate specific environmental concerns shown in the image.\n",
+        "\n",
+        "custom_question = input(\"\\nAsk your own question about the image: \")\n",
+        "custom_result, custom_usage = analyze_image(image_filename, custom_question)\n",
+        "\n",
+        "print(\"\\n--- Response ---\")\n",
+        "print(custom_result)\n",
+        "print(f\"\\nTokens used: {custom_usage.total_token_count}\")"
+      ],
+      "metadata": {
+        "id": "norQI-EFN-vt"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This code cell demonstrates a failure in the AI system.\n",
+        "# The prompt only tells Gemini to \"Extract water issue info\"\n",
+        "# without enforcing a structured JSON schema.\n",
+        "\n",
+        "# As a result, the AI may return free-form natural language\n",
+        "# instead of valid JSON. Because json.loads() expects properly\n",
+        "# formatted JSON data, the code can fail with a parsing error.\n",
+        "\n",
+        "# This is an important limitation because automated city systems\n",
+        "# require predictable machine-readable outputs to reliably process\n",
+        "# environmental reports. The failure demonstrates why\n",
+        "# schema-constrained prompting is necessary for consistent and\n",
+        "# reliable AI workflows.\n",
+        "\n",
+        "user_report = \"There is dirty water, trash, and a bad smell near a creek on Elm Street.\"\n",
+        "\n",
+        "response = genai.GenerativeModel(\n",
+        "    model_name=\"gemini-2.5-flash\",\n",
+        "    system_instruction=\"Extract water issue info.\"\n",
+        ").generate_content(user_report)\n",
+        "\n",
+        "result = json.loads(response.text)\n",
+        "\n",
+        "print(result)"
+      ],
+      "metadata": {
+        "id": "WTQ_ZQLD78KD"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
